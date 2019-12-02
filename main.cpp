@@ -4,10 +4,10 @@
 #include <ctime>
 using namespace std;
 
-unsigned short index, cpu[65536];
+unsigned short index, cpu[ 65536 ];
 class OptiCode{
 public:
-    enum typeComad{
+    enum TypeComad{
         SHIFT,
         ADD,
         ZERO,
@@ -15,65 +15,65 @@ public:
         IN,
         WHILE,
         END,
-        Default
+        DEFAULT
     };
-    OptiCode(typeComad type, int countArg)
+    OptiCode( TypeComad type, int count_arg )
     {
-        this->type = type;
-        this->arg = countArg;
+        this->mType = type;
+        this->mArg = count_arg;
     }
 
-    OptiCode(typeComad type)
+    OptiCode( TypeComad type )
     {
-        this->type = type;
+        this->mType = type;
     }
-    int arg = 1;
-    typeComad type = Default; //тип операции
+    int mArg = 1;
+    TypeComad mType = DEFAULT; //тип операции
     OptiCode* clone(){
-        return new OptiCode(type, arg);
+        return new OptiCode( mType, mArg );
     }
 };
 
 class Tokenizer{
 
-    vector<OptiCode*> retValue;
+    vector< OptiCode* > mRetValue;
 public:
-    vector<OptiCode*>& tokenize(vector<char>& code) {
+    vector< OptiCode* >& Tokenize( vector< char >& code ) {
 
         //Приходимся по всем символам
-        for(unsigned int pos = 0; pos < code.size(); ++pos) {
-            switch (code[pos]) {
+        for( unsigned int pos = 0; pos < code.size(); ++pos ) {
+            switch ( code[ pos ] ) {
             //Как и говорилось ранее, некоторые команды эквивалентны
-            case '>': { retValue.emplace_back(new OptiCode(OptiCode::typeComad::SHIFT, +1)); break; }
-            case '<': { retValue.emplace_back(new OptiCode(OptiCode::typeComad::SHIFT, -1)); break; }
+            case '>': { mRetValue.emplace_back( new OptiCode( OptiCode::TypeComad::SHIFT, +1 ) ); break; }
+            case '<': { mRetValue.emplace_back( new OptiCode( OptiCode::TypeComad::SHIFT, -1 ) ); break; }
 
-            case '+': { retValue.emplace_back(new OptiCode(OptiCode::typeComad::ADD, +1)); break; }
-            case '-': { retValue.emplace_back(new OptiCode(OptiCode::typeComad::ADD, -1)); break; }
+            case '+': { mRetValue.emplace_back( new OptiCode( OptiCode::TypeComad::ADD, +1 ) ); break; }
+            case '-': { mRetValue.emplace_back( new OptiCode( OptiCode::TypeComad::ADD, -1 ) ); break; }
 
-            case '.': { retValue.emplace_back(new OptiCode(OptiCode::typeComad::OUT)); break; }
-            case ',': { retValue.emplace_back(new OptiCode(OptiCode::typeComad::IN)); break; }
+            case '.': { mRetValue.emplace_back( new OptiCode( OptiCode::TypeComad::OUT ) ); break; }
+            case ',': { mRetValue.emplace_back( new OptiCode( OptiCode::TypeComad::IN ) ); break; }
             case '[':
             {
-                char next = code[pos + 1];
+                char next = code[ pos + 1 ];
 
-                //проверяем, является ли это обнулением ячейки ([+] или [-])
-                if((next == '+' || next == '-') && code[pos + 2] == ']') {
-                    retValue.emplace_back(new OptiCode(OptiCode::typeComad::ZERO));
+                //проверяем, является ли это обнулением ячейки ( [+] или [-] )
+                if( ( next == '+' || next == '-' ) && code[ pos + 2 ] == ']' ) {
+                    mRetValue.emplace_back( new OptiCode( OptiCode::TypeComad::ZERO ) );
                     pos += 2;
                 } else
-                    retValue.emplace_back(new OptiCode(OptiCode::typeComad::WHILE));
+                    mRetValue.emplace_back( new OptiCode( OptiCode::TypeComad::WHILE ) );
                 break;
             }
-            case ']': { retValue.emplace_back(new OptiCode(OptiCode::typeComad::END)); break; }
+            case ']': { mRetValue.emplace_back( new OptiCode( OptiCode::TypeComad::END ) ); break; }
             default: break;
             }
         }
 
-        return retValue;
+        return mRetValue;
     }
-    void clearData()
+    void ClearData()
     {
-        for (auto it = retValue.begin() ; it != retValue.end(); ++it)
+        for (auto it = mRetValue.begin() ; it != mRetValue.end(); ++it)
             if((*it) != nullptr)
                 delete (*it);
     }
@@ -83,102 +83,102 @@ class Optimizer {
 
 
 public:
-    vector<OptiCode*> optimize(vector<char>& code) {
-        return optimize(tokenizer.tokenize(code));
+    vector< OptiCode* > Optimize( vector< char >& code ) {
+        return Optimize( mTokenizer.Tokenize( code ) );
     }
-    void clearData()
+    void ClearData()
     {
-        tokenizer.clearData();
-        for (auto it = retValue.begin() ; it != retValue.end(); ++it)
+        mTokenizer.ClearData();
+        for (auto it = mRetValue.begin() ; it != mRetValue.end(); ++it)
             if((*it) != nullptr)
                 delete (*it);
     }
 private:
-    vector<OptiCode*> retValue;
-    Tokenizer tokenizer;
-    vector<OptiCode*>& optimize(vector<OptiCode*>& tokens) {
-        retValue.emplace_back(tokens.front()->clone());//это первая итерация, добавляем 1 элемент
+    vector< OptiCode* > mRetValue;
+    Tokenizer mTokenizer;
+    vector< OptiCode* >& Optimize(vector< OptiCode* >& tokens) {
+        mRetValue.emplace_back( tokens.front()->clone() );//это первая итерация, добавляем 1 элемент
         //Приходимся по всем командам начиная со 2
-        for (unsigned int token = 1; token < tokens.size(); token++) {
+        for ( unsigned int token = 1; token < tokens.size(); token++ ) {
 
-            if(retValue.back()->type != tokens[token]->type)
+            if( mRetValue.back()->mType != tokens[ token ]->mType )
             {
-                if(retValue.back()->arg == 0) //если в результате сжатия команда "исчезла"
-                    retValue.pop_back(); //то просто убираем ее
+                if( mRetValue.back()->mArg == 0 ) //если в результате сжатия команда "исчезла"
+                    mRetValue.pop_back(); //то просто убираем ее
 
-                retValue.emplace_back(tokens[token]->clone()); //добавляем текущую команду
+                mRetValue.emplace_back( tokens[ token ]->clone() ); //добавляем текущую команду
                 continue;
             }
             //сюда мы попадет при условии, если команда дальше повторяется
             //мы просто дополняем текущую команду вместо добавления новой
-            retValue.back()->arg += tokens[token]->arg;
+            mRetValue.back()->mArg += tokens[ token ]->mArg;
 
         }
-        return retValue;
+        return mRetValue;
     }
 };
 
 class InterpreterBf
 {
 private:
-    Optimizer optimizer;
+    Optimizer Optimizer;
 public:
-    void interpret(vector<char>& code){
-        interpret(optimizer.optimize(code));
+    void Interpret( vector< char >& code ){
+        Interpret( Optimizer.Optimize( code ) );
     }
-    void clearData()
+    void ClearData()
     {
-        optimizer.clearData();
+        Optimizer.ClearData();
     }
 private:
-    void interpret(vector<OptiCode*> compresCode)
+    void Interpret(vector<OptiCode*> compres_code)
     {
         int brc = 0; // счетчик незакрытых скобок.
-        for( size_t numElement = 0; numElement < compresCode.size(); ++numElement )
+        for( size_t pos = 0; pos < compres_code.size(); ++pos )
         {
-            switch (compresCode[numElement]->type){
-            case OptiCode::SHIFT: { index+= compresCode[numElement]->arg; break; }
-            case OptiCode::ADD: { cpu[index]+= compresCode[numElement]->arg; break;}
+            switch (compres_code[ pos ]->mType){
+            case OptiCode::SHIFT: { index += compres_code[ pos ]->mArg; break; }
+            case OptiCode::ADD: { cpu [index ] += compres_code[ pos ]->mArg; break;}
             case OptiCode::OUT:
             {
 //                int16_t value = 0;
 //                value = (static_cast<int16_t>(cpu[index - 1] << 8)) + static_cast<int16_t>(cpu[index]);
-                for(int i = 0; i < compresCode[numElement]->arg; i++)
-                    cout << (char)cpu[index];
+                for(int i = 0; i < compres_code[pos ]->mArg; i++)
+                    cout << ( char )cpu[ index ];
                 break;
             }
-            case OptiCode::IN: { cin >> cpu[index]; break;}
-            case OptiCode::ZERO: { cpu[index] = 0; break;}
+            case OptiCode::IN: { cin >> cpu[ index ]; break;}
+            case OptiCode::ZERO: { cpu[ index ] = 0; break;}
             case OptiCode::WHILE:
             {
-                if(!cpu[index]) //Если значение по текущему адресу ноль.
+                if(!cpu[ index ]) //Если значение по текущему адресу ноль.
                 {
                     ++brc; //Инкрементируем счетчик скобок.
                     while(brc) // Пока есть не закрытые скобки.
                     {
-                        ++numElement; //К следующему символу.
-                        if (compresCode[numElement]->type == OptiCode::WHILE) ++brc; //Открываем скобку.
-                        if (compresCode[numElement]->type == OptiCode::END) --brc; //Закрываем скобку.
+                        ++pos; //К следующему символу.
+                        if ( compres_code[ pos ]->mType == OptiCode::WHILE ) ++brc; //Открываем скобку.
+                        if ( compres_code[ pos ]->mType == OptiCode::END ) --brc; //Закрываем скобку.
                     }
-                }else continue; //Если не ноль берем следующий символ.
+                } else continue; //Если не ноль берем следующий символ.
                 break;
             }
             case OptiCode::END:
             {
-                if(!cpu[index]) //Если значение по адресу ноль.
+                if(!cpu[ index ]) //Если значение по адресу ноль.
                 {
                     continue; //Переходим к следующему символу.
                 }
                 else //Если не ноль.
                 {
-                    if(compresCode[numElement]->type == OptiCode::END) brc++; //Если скобка закрывающаяся  инкрементируем счетчик скобок.
-                    while(brc) //Пока есть незакрытые скобки.
+                    if( compres_code[ pos ]->mType == OptiCode::END ) brc++; //Если скобка закрывающаяся  инкрементируем счетчик скобок.
+                    while( brc ) //Пока есть незакрытые скобки.
                     {
-                        --numElement; // Смотрим предыдущий символ.
-                        if (compresCode[numElement]->type == OptiCode::WHILE) brc--; //Если скобка открытая декрементируем счетчик.
-                        if (compresCode[numElement]->type == OptiCode::END) brc++; //Если закрытая инкрементируем счетчик.
+                        --pos; // Смотрим предыдущий символ.
+                        if ( compres_code[ pos ]->mType == OptiCode::WHILE ) brc--; //Если скобка открытая декрементируем счетчик.
+                        if ( compres_code[ pos ]->mType == OptiCode::END ) brc++; //Если закрытая инкрементируем счетчик.
                     }
-                    --numElement; //Смотрим предыдущий символ.
+                    --pos; //Смотрим предыдущий символ.
                 }
                 break;
             }
@@ -188,72 +188,72 @@ private:
     }
 };
 
-void interpreterOriginBF(vector<char>& inputData)
+void InterpreterOriginBF( vector< char >& input_data)
 {
 
     unsigned short j = 0; //Регистр текущего адреса памяти интерпретатора.
     int brc = 0; // счетчик незакрытых скобок.
-    for( size_t i = 0; i < inputData.size(); ++i )
+    for( size_t index_data = 0; index_data < input_data.size(); ++index_data )
     {
-        if(inputData[i] == '>') j++;
-        if(inputData[i] == '<') j--;
-        if(inputData[i] == '+') cpu[j]++;
-        if(inputData[i] == '-') cpu[j]--;
-        if(inputData[i] == '.') cout << (char)cpu[j];
-        if(inputData[i] == ',') cin >> cpu[j];
-        if(inputData[i] == '[')
+        if( input_data[ index_data ] == '>' ) j++;
+        if( input_data[ index_data ] == '<' ) j--;
+        if( input_data[ index_data ] == '+' ) cpu[ j ]++;
+        if( input_data[ index_data ] == '-' ) cpu[ j ]--;
+        if( input_data[ index_data ] == '.' ) cout << ( char )cpu[ j ];
+        if( input_data[ index_data ] == ',' ) cin >> cpu[ j ];
+        if( input_data[ index_data ] == '[' )
         {
-            if(!cpu[j]) //Если значение по текущему адресу ноль.
+            if( !cpu[ j ] ) //Если значение по текущему адресу ноль.
             {
                 ++brc; //Инкрементируем счетчик скобок.
-                while(brc) // Пока есть не закрытые скобки.
+                while( brc ) // Пока есть не закрытые скобки.
                 {
-                    ++i; //К следующему символу.
-                    if (inputData[i] == '[') ++brc; //Открываем скобку.
-                    if (inputData[i] == ']') --brc; //Закрываем скобку.
+                    ++index_data; //К следующему символу.
+                    if ( input_data[ index_data ] == '[' ) ++brc; //Открываем скобку.
+                    if ( input_data[ index_data ] == ']' ) --brc; //Закрываем скобку.
                 }
             }else continue; //Если не ноль берем следующий символ.
         }
-        else if(inputData[i] == ']') //Если скобка заркывающаяся.
+        else if( input_data[ index_data ] == ']' ) //Если скобка заркывающаяся.
         {
-            if(!cpu[j]) //Если значение по адресу ноль.
+            if( !cpu[ j ] ) //Если значение по адресу ноль.
             {
                 continue; //Переходим к следующему символу.
             }
             else //Если не ноль.
             {
-                if(inputData[i] == ']') brc++; //Если скобка закрывающаяся  инкрементируем счетчик скобок.
-                while(brc) //Пока есть незакрытые скобки.
+                if( input_data[ index_data ] == ']' ) brc++; //Если скобка закрывающаяся  инкрементируем счетчик скобок.
+                while( brc ) //Пока есть незакрытые скобки.
                 {
-                    --i; // Смотрим предыдущий символ.
-                    if(inputData[i] == '[') brc--; //Если скобка открытая декрементируем счетчик.
-                    if(inputData[i] == ']') brc++; //Если закрытая инкрементируем счетчик.
+                    --index_data; // Смотрим предыдущий символ.
+                    if( input_data[ index_data ] == '[' ) brc--; //Если скобка открытая декрементируем счетчик.
+                    if( input_data[ index_data ] == ']' ) brc++; //Если закрытая инкрементируем счетчик.
                 }
-                --i; //Смотрим предыдущий символ.
+                --index_data; //Смотрим предыдущий символ.
             }
         }
     }
 }
 int main()
 {
-    vector<char> inputData;
-    ifstream file("test.txt");
-    if(!file.is_open())
+    vector< char > input_data;
+    ifstream file( "test.txt" );
+    if( !file.is_open() )
         cout << "file doesn't exist";
 
     char c;
-    while (file.get(c))
-      inputData.push_back(c);
+    while ( file.get( c ) )
+      input_data.push_back( c );
 
     auto start_time =  clock();
 //    interpreterOriginBF(inputData);
     InterpreterBf token;
-    token.interpret(inputData);
+    token.Interpret( input_data );
     auto end_time = clock();
     auto search_time = end_time - start_time;
 
     cout << "program execution time is " << search_time;
-    token.clearData();
+    token.ClearData();
     return 0;
 }
 
